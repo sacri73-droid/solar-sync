@@ -1,0 +1,74 @@
+name: Solar Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: curl, pdo, pdo_mysql
+          coverage: none
+
+      - name: Ensure runtime folders exist
+        run: |
+          mkdir -p private
+          touch zcs_sync_debug.log
+          touch zcs_sync_last_run.json
+          touch zcs_token_cache.json
+
+      - name: Write secrets file
+        run: |
+          cat > private/zcs_secrets.php <<'PHP'
+          <?php
+          return [
+              'cron_key' => '${{ secrets.CRON_KEY }}',
+
+              'db_host' => '${{ secrets.DB_HOST }}',
+              'db_name' => '${{ secrets.DB_NAME }}',
+              'db_user' => '${{ secrets.DB_USER }}',
+              'db_pass' => '${{ secrets.DB_PASS }}',
+              'db_charset' => 'utf8mb4',
+
+              'firebase_api_key' => '${{ secrets.FIREBASE_API_KEY }}',
+              'zcs_email' => '${{ secrets.ZCS_EMAIL }}',
+              'zcs_password' => '${{ secrets.ZCS_PASSWORD }}',
+              'graphql_url' => '${{ secrets.GRAPHQL_URL }}',
+
+              'zcs_serials' => [
+                  '${{ secrets.ZCS_SERIAL_1 }}',
+              ],
+
+              'solarman_site_id' => '${{ secrets.SOLARMAN_SITE_ID }}',
+              'solarman_device_id' => '${{ secrets.SOLARMAN_DEVICE_ID }}',
+              'solarman_device_sn' => '${{ secrets.SOLARMAN_DEVICE_SN }}',
+
+              'solarman_cookie' => '${{ secrets.SOLARMAN_COOKIE }}',
+              'solarman_bearer_token' => '${{ secrets.SOLARMAN_BEARER_TOKEN }}',
+          ];
+          PHP
+
+      - name: Run sync
+        run: php zcs_solarman_sync.php
+
+      - name: Upload debug artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: solar-sync-debug
+          path: |
+            zcs_sync_debug.log
+            zcs_sync_last_run.json
+            zcs_token_cache.json
+          if-no-files-found: ignore
