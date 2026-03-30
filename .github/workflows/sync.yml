@@ -43,16 +43,20 @@ jobs:
               'db_user' => '${{ secrets.DB_USER }}',
               'db_pass' => '${{ secrets.DB_PASS }}',
               'db_charset' => 'utf8mb4',
+
               'firebase_api_key' => '${{ secrets.FIREBASE_API_KEY }}',
               'zcs_email' => '${{ secrets.ZCS_EMAIL }}',
               'zcs_password' => '${{ secrets.ZCS_PASSWORD }}',
               'graphql_url' => '${{ secrets.GRAPHQL_URL }}',
+
               'zcs_serials' => [
                   '${{ secrets.ZCS_SERIAL_1 }}',
               ],
+
               'solarman_site_id' => '${{ secrets.SOLARMAN_SITE_ID }}',
               'solarman_device_id' => '${{ secrets.SOLARMAN_DEVICE_ID }}',
               'solarman_device_sn' => '${{ secrets.SOLARMAN_DEVICE_SN }}',
+
               'solarman_cookie' => '${{ secrets.SOLARMAN_COOKIE }}',
               'solarman_bearer_token' => '${{ secrets.SOLARMAN_BEARER_TOKEN }}',
           ];
