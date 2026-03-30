@@ -2,6 +2,7 @@ name: Solar Sync
 
 on:
   workflow_dispatch:
+  push:
   schedule:
     - cron: "3/5 * * * *"
 
