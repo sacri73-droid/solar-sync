@@ -8,17 +8,27 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v5
 
-      - uses: shivammathur/setup-php@v2
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
+          extensions: curl, pdo, pdo_mysql
+          coverage: none
 
-      - run: mkdir -p private
+      - name: Ensure runtime folders exist
+        run: |
+          mkdir -p private
+          touch zcs_sync_debug.log
+          touch zcs_sync_last_run.json
+          touch zcs_token_cache.json
 
-      - name: Create secrets file
+      - name: Write secrets file
         run: |
           cat > private/zcs_secrets.php <<'PHP'
           <?php
@@ -28,11 +38,14 @@ jobs:
               'db_name' => '${{ secrets.DB_NAME }}',
               'db_user' => '${{ secrets.DB_USER }}',
               'db_pass' => '${{ secrets.DB_PASS }}',
+              'db_charset' => 'utf8mb4',
               'firebase_api_key' => '${{ secrets.FIREBASE_API_KEY }}',
               'zcs_email' => '${{ secrets.ZCS_EMAIL }}',
               'zcs_password' => '${{ secrets.ZCS_PASSWORD }}',
               'graphql_url' => '${{ secrets.GRAPHQL_URL }}',
-              'zcs_serials' => ['${{ secrets.ZCS_SERIAL_1 }}'],
+              'zcs_serials' => [
+                  '${{ secrets.ZCS_SERIAL_1 }}',
+              ],
               'solarman_site_id' => '${{ secrets.SOLARMAN_SITE_ID }}',
               'solarman_device_id' => '${{ secrets.SOLARMAN_DEVICE_ID }}',
               'solarman_device_sn' => '${{ secrets.SOLARMAN_DEVICE_SN }}',
@@ -41,4 +54,5 @@ jobs:
           ];
           PHP
 
-      - run: php zcs_solarman_sync.php
+      - name: Run sync
+        run: php zcs_solarman_sync.php
