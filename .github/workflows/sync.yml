@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
   schedule:
-    - cron: "3/5 * * * *"
+    - cron: "*/5 * * * *"
 
 jobs:
   sync:
@@ -62,5 +62,50 @@ jobs:
           ];
           PHP
 
+      - name: Debug target config
+        run: |
+          php -r "
+          \$cfg = require 'private/zcs_secrets.php';
+          echo 'DB_HOST=' . (\$cfg['db_host'] ?? '') . PHP_EOL;
+          echo 'DB_NAME=' . (\$cfg['db_name'] ?? '') . PHP_EOL;
+          echo 'DB_USER=' . (\$cfg['db_user'] ?? '') . PHP_EOL;
+          echo 'SERIAL=' . (\$cfg['solarman_device_sn'] ?? '') . PHP_EOL;
+          echo 'SITE_ID=' . (\$cfg['solarman_site_id'] ?? '') . PHP_EOL;
+          "
+
+      - name: Check sync file signature
+        run: |
+          php -r "
+          \$code = file_get_contents('zcs_solarman_sync.php');
+          echo (strpos(\$code, 'saved_rows') !== false ? 'FOUND_saved_rows' : 'MISSING_saved_rows') . PHP_EOL;
+          echo (strpos(\$code, 'sample_ts') !== false ? 'FOUND_sample_ts' : 'MISSING_sample_ts') . PHP_EOL;
+          echo (strpos(\$code, 'solar_combined_samples') !== false ? 'FOUND_table_name' : 'MISSING_table_name') . PHP_EOL;
+          "
+
       - name: Run sync
-        run: php zcs_solarman_sync.php
+        run: php zcs_solarman_sync.php | tee sync_output.json
+
+      - name: Show sync output
+        run: cat sync_output.json
+
+      - name: Validate sync result
+        run: |
+          php -r "
+          \$raw = file_get_contents('sync_output.json');
+          \$data = json_decode(\$raw, true);
+          if (!is_array(\$data)) {
+              fwrite(STDERR, 'Output non JSON valido' . PHP_EOL);
+              exit(1);
+          }
+          if (!(\$data['ok'] ?? false)) {
+              fwrite(STDERR, 'Sync fallita' . PHP_EOL);
+              exit(1);
+          }
+          echo 'SYNC_OK' . PHP_EOL;
+          if (isset(\$data['saved_rows'])) {
+              echo 'saved_rows=' . \$data['saved_rows'] . PHP_EOL;
+          }
+          if (isset(\$data['sample_ts'])) {
+              echo 'sample_ts=' . \$data['sample_ts'] . PHP_EOL;
+          }
+          "
