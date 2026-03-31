@@ -108,4 +108,4 @@ jobs:
           if (isset(\$data['sample_ts'])) {
               echo 'sample_ts=' . \$data['sample_ts'] . PHP_EOL;
           }
-          "
+          
