@@ -9,102 +9,44 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
 
     steps:
       - name: Show trigger
         run: echo "Triggered by ${{ github.event_name }}"
 
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.2"
-          extensions: curl, pdo, pdo_mysql
-          coverage: none
-
-      - name: Ensure runtime folders exist
+      - name: Call remote sync on server
         run: |
-          mkdir -p private
-          touch zcs_sync_debug.log
-          touch zcs_sync_last_run.json
-          touch zcs_token_cache.json
+          curl -sS "https://stefanosacripanti.ct.ws/zcs_solarman_sync.php?key=${{ secrets.CRON_KEY }}" | tee sync_output.json
 
-      - name: Write secrets file
-        run: |
-          cat > private/zcs_secrets.php <<'PHP'
-          <?php
-          return [
-              'cron_key' => '${{ secrets.CRON_KEY }}',
-              'db_host' => '${{ secrets.DB_HOST }}',
-              'db_name' => '${{ secrets.DB_NAME }}',
-              'db_user' => '${{ secrets.DB_USER }}',
-              'db_pass' => '${{ secrets.DB_PASS }}',
-              'db_charset' => 'utf8mb4',
-
-              'firebase_api_key' => '${{ secrets.FIREBASE_API_KEY }}',
-              'zcs_email' => '${{ secrets.ZCS_EMAIL }}',
-              'zcs_password' => '${{ secrets.ZCS_PASSWORD }}',
-              'graphql_url' => '${{ secrets.GRAPHQL_URL }}',
-
-              'zcs_serials' => [
-                  '${{ secrets.ZCS_SERIAL_1 }}',
-              ],
-
-              'solarman_site_id' => '${{ secrets.SOLARMAN_SITE_ID }}',
-              'solarman_device_id' => '${{ secrets.SOLARMAN_DEVICE_ID }}',
-              'solarman_device_sn' => '${{ secrets.SOLARMAN_DEVICE_SN }}',
-
-              'solarman_cookie' => '${{ secrets.SOLARMAN_COOKIE }}',
-              'solarman_bearer_token' => '${{ secrets.SOLARMAN_BEARER_TOKEN }}',
-          ];
-          PHP
-
-      - name: Debug target config
-        run: |
-          php -r "
-          \$cfg = require 'private/zcs_secrets.php';
-          echo 'DB_HOST=' . (\$cfg['db_host'] ?? '') . PHP_EOL;
-          echo 'DB_NAME=' . (\$cfg['db_name'] ?? '') . PHP_EOL;
-          echo 'DB_USER=' . (\$cfg['db_user'] ?? '') . PHP_EOL;
-          echo 'SERIAL=' . (\$cfg['solarman_device_sn'] ?? '') . PHP_EOL;
-          echo 'SITE_ID=' . (\$cfg['solarman_site_id'] ?? '') . PHP_EOL;
-          "
-
-      - name: Check sync file signature
-        run: |
-          php -r "
-          \$code = file_get_contents('zcs_solarman_sync.php');
-          echo (strpos(\$code, 'saved_rows') !== false ? 'FOUND_saved_rows' : 'MISSING_saved_rows') . PHP_EOL;
-          echo (strpos(\$code, 'sample_ts') !== false ? 'FOUND_sample_ts' : 'MISSING_sample_ts') . PHP_EOL;
-          echo (strpos(\$code, 'solar_combined_samples') !== false ? 'FOUND_table_name' : 'MISSING_table_name') . PHP_EOL;
-          "
-
-      - name: Run sync
-        run: php zcs_solarman_sync.php | tee sync_output.json
-
-      - name: Show sync output
+      - name: Show response
         run: cat sync_output.json
 
-      - name: Validate sync result
+      - name: Validate response
         run: |
           php -r "
           \$raw = file_get_contents('sync_output.json');
           \$data = json_decode(\$raw, true);
+
           if (!is_array(\$data)) {
               fwrite(STDERR, 'Output non JSON valido' . PHP_EOL);
               exit(1);
           }
+
           if (!(\$data['ok'] ?? false)) {
               fwrite(STDERR, 'Sync fallita' . PHP_EOL);
+              if (isset(\$data['error'])) {
+                  fwrite(STDERR, \$data['error'] . PHP_EOL);
+              }
               exit(1);
           }
+
           echo 'SYNC_OK' . PHP_EOL;
+
           if (isset(\$data['saved_rows'])) {
               echo 'saved_rows=' . \$data['saved_rows'] . PHP_EOL;
           }
+
           if (isset(\$data['sample_ts'])) {
               echo 'sample_ts=' . \$data['sample_ts'] . PHP_EOL;
           }
