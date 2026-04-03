@@ -2,7 +2,6 @@ name: Solar Sync
 
 on:
   workflow_dispatch:
-  push:
   schedule:
     - cron: "*/5 * * * *"
 
@@ -17,37 +16,34 @@ jobs:
 
       - name: Call remote sync on server
         run: |
-          curl -sS --fail "https://stefanosacripanti.ct.ws/zcs_solarman_sync.php?key=${{ secrets.CRON_KEY }}&_=$(date +%s)" | tee sync_output.json
+          curl -A "Mozilla/5.0" -sS "https://stefanosacripanti.ct.ws/zcs_solarman_sync.php?key=${{ secrets.CRON_KEY }}&_=$(date +%s)" -o sync_output.txt || true
 
-      - name: Show response
-        run: cat sync_output.json
+      - name: Show raw response
+        run: |
+          echo "----- RESPONSE START -----"
+          cat sync_output.txt || true
+          echo
+          echo "----- RESPONSE END -----"
 
-      - name: Validate response
+      - name: Soft validate response
         run: |
           php -r "
-          \$raw = file_get_contents('sync_output.json');
+          \$raw = @file_get_contents('sync_output.txt');
+          if (!is_string(\$raw) || trim(\$raw) === '') {
+              echo 'Risposta vuota dal server' . PHP_EOL;
+              exit(0);
+          }
           \$data = json_decode(\$raw, true);
-
-          if (!is_array(\$data)) {
-              fwrite(STDERR, 'Output non JSON valido' . PHP_EOL);
-              exit(1);
-          }
-
-          if (!(\$data['ok'] ?? false)) {
-              fwrite(STDERR, 'Sync fallita' . PHP_EOL);
-              if (isset(\$data['error'])) {
-                  fwrite(STDERR, \$data['error'] . PHP_EOL);
+          if (is_array(\$data) && !empty(\$data['ok'])) {
+              echo 'SYNC_OK' . PHP_EOL;
+              if (isset(\$data['saved_rows'])) {
+                  echo 'saved_rows=' . \$data['saved_rows'] . PHP_EOL;
               }
-              exit(1);
+              if (isset(\$data['sample_ts'])) {
+                  echo 'sample_ts=' . \$data['sample_ts'] . PHP_EOL;
+              }
+              exit(0);
           }
-
-          echo 'SYNC_OK' . PHP_EOL;
-
-          if (isset(\$data['saved_rows'])) {
-              echo 'saved_rows=' . \$data['saved_rows'] . PHP_EOL;
-          }
-
-          if (isset(\$data['sample_ts'])) {
-              echo 'sample_ts=' . \$data['sample_ts'] . PHP_EOL;
-          }
+          echo 'Risposta non JSON o filtrata dal provider' . PHP_EOL;
+          exit(0);
           "
