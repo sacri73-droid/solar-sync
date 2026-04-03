@@ -53,20 +53,35 @@ jobs:
           ];
           PHP
 
-      - name: Run sync
-        run: php zcs_solarman_sync.php | tee sync_output.json
+      - name: Check file exists
+        run: |
+          ls -la
+          test -f zcs_solarman_sync.php
 
-      - name: Show response
-        run: cat sync_output.json
+      - name: Run sync and capture raw output
+        run: |
+          php zcs_solarman_sync.php > sync_output.txt 2>&1 || true
+          echo "----- RAW OUTPUT START -----"
+          cat sync_output.txt
+          echo
+          echo "----- RAW OUTPUT END -----"
 
       - name: Validate response
         run: |
           php -r "
-          \$raw = file_get_contents('sync_output.json');
-          \$data = json_decode(\$raw, true);
+          \$raw = file_get_contents('sync_output.txt');
+          \$trim = trim(\$raw);
+
+          if (\$trim === '') {
+              fwrite(STDERR, 'Output vuoto' . PHP_EOL);
+              exit(1);
+          }
+
+          \$data = json_decode(\$trim, true);
 
           if (!is_array(\$data)) {
               fwrite(STDERR, 'Output non JSON valido' . PHP_EOL);
+              fwrite(STDERR, \$trim . PHP_EOL);
               exit(1);
           }
 
