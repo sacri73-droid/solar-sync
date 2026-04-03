@@ -17,7 +17,7 @@ jobs:
 
       - name: Call remote sync on server
         run: |
-          curl -sS "https://stefanosacripanti.ct.ws/zcs_solarman_sync.php?key=${{ secrets.CRON_KEY }}" | tee sync_output.json
+          curl -sS --fail "https://stefanosacripanti.ct.ws/zcs_solarman_sync.php?key=${{ secrets.CRON_KEY }}&_=$(date +%s)" | tee sync_output.json
 
       - name: Show response
         run: cat sync_output.json
