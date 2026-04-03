@@ -1,0 +1,22 @@
+{
+    "ok": true,
+    "time": "2026-04-03 15:37:42",
+    "sample_ts": "2026-04-03 15:34:46",
+    "source": "github_json",
+    "data": {
+        "ts": 1775223286,
+        "voltage": 237.7,
+        "load": 380,
+        "grid": 3600,
+        "pv": 4100,
+        "battery_soc": 100,
+        "battery_power": 30
+    },
+    "flow": {
+        "pv_to_home": 380,
+        "pv_to_battery": 30,
+        "battery_to_home": 0,
+        "grid_to_home": 3600,
+        "home_to_grid": 0
+    }
+}
