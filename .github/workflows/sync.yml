@@ -66,12 +66,10 @@ jobs:
           php -r "
           \$raw = file_get_contents('sync_output.json');
           \$data = json_decode(\$raw, true);
-
           if (!is_array(\$data)) {
               fwrite(STDERR, 'Output non JSON valido' . PHP_EOL);
               exit(1);
           }
-
           if (!(\$data['ok'] ?? false)) {
               fwrite(STDERR, 'Sync live fallita' . PHP_EOL);
               if (isset(\$data['error'])) {
@@ -79,11 +77,10 @@ jobs:
               }
               exit(1);
           }
-
           echo 'LIVE_SYNC_OK' . PHP_EOL;
           "
 
-      - name: Save voltage history to DB
+      - name: Save voltage history
         run: php zcs_solarman_history_sync.php | tee history_output.json
 
       - name: Validate history sync
@@ -91,12 +88,10 @@ jobs:
           php -r "
           \$raw = file_get_contents('history_output.json');
           \$data = json_decode(\$raw, true);
-
           if (!is_array(\$data)) {
               fwrite(STDERR, 'History output non JSON valido' . PHP_EOL);
               exit(1);
           }
-
           if (!(\$data['ok'] ?? false)) {
               fwrite(STDERR, 'Storico tensione fallito' . PHP_EOL);
               if (isset(\$data['error'])) {
@@ -104,7 +99,6 @@ jobs:
               }
               exit(1);
           }
-
           echo 'HISTORY_SYNC_OK' . PHP_EOL;
           "
 
@@ -112,7 +106,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/latest.json data/heartbeat.json
+          git add data/latest.json data/heartbeat.json data/voltage_history.json
           git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "Update solar live JSON"
+          git commit -m "Update solar JSON files"
           git push
