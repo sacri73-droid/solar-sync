@@ -1,7 +1,7 @@
 {
     "ok": true,
     "source": "github_json",
-    "updated_at": "2026-04-10 00:03:00",
+    "updated_at": "2026-04-10 00:55:05",
     "rows": {
         "1775746227": {
             "sample_ts": 1775746227,
@@ -55,6 +55,12 @@
             "sample_ts": 1775772116,
             "datetime_local": "2026-04-10 00:01:56",
             "voltage_ac": 230.4,
+            "source": "github_json"
+        },
+        "1775775254": {
+            "sample_ts": 1775775254,
+            "datetime_local": "2026-04-10 00:54:14",
+            "voltage_ac": 232.2,
             "source": "github_json"
         }
     }
