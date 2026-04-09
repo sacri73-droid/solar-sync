@@ -24,7 +24,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
-          extensions: curl
+          extensions: curl, pdo, pdo_mysql
           coverage: none
 
       - name: Ensure folders exist
@@ -38,6 +38,11 @@ jobs:
           <?php
           return [
               'cron_key' => '${{ secrets.CRON_KEY }}',
+              'db_host' => '${{ secrets.DB_HOST }}',
+              'db_name' => '${{ secrets.DB_NAME }}',
+              'db_user' => '${{ secrets.DB_USER }}',
+              'db_pass' => '${{ secrets.DB_PASS }}',
+              'db_charset' => 'utf8mb4',
               'firebase_api_key' => '${{ secrets.FIREBASE_API_KEY }}',
               'zcs_email' => '${{ secrets.ZCS_EMAIL }}',
               'zcs_password' => '${{ secrets.ZCS_PASSWORD }}',
@@ -53,48 +58,54 @@ jobs:
           ];
           PHP
 
-      - name: Check file exists
-        run: |
-          ls -la
-          test -f zcs_solarman_sync.php
+      - name: Run live sync
+        run: php zcs_solarman_sync.php | tee sync_output.json
 
-      - name: Run sync and capture raw output
-        run: |
-          php zcs_solarman_sync.php > sync_output.txt 2>&1 || true
-          echo "----- RAW OUTPUT START -----"
-          cat sync_output.txt
-          echo
-          echo "----- RAW OUTPUT END -----"
-
-      - name: Validate response
+      - name: Validate live sync
         run: |
           php -r "
-          \$raw = file_get_contents('sync_output.txt');
-          \$trim = trim(\$raw);
-
-          if (\$trim === '') {
-              fwrite(STDERR, 'Output vuoto' . PHP_EOL);
-              exit(1);
-          }
-
-          \$data = json_decode(\$trim, true);
+          \$raw = file_get_contents('sync_output.json');
+          \$data = json_decode(\$raw, true);
 
           if (!is_array(\$data)) {
               fwrite(STDERR, 'Output non JSON valido' . PHP_EOL);
-              fwrite(STDERR, \$trim . PHP_EOL);
               exit(1);
           }
 
           if (!(\$data['ok'] ?? false)) {
-              fwrite(STDERR, 'Sync fallita' . PHP_EOL);
+              fwrite(STDERR, 'Sync live fallita' . PHP_EOL);
               if (isset(\$data['error'])) {
                   fwrite(STDERR, \$data['error'] . PHP_EOL);
               }
               exit(1);
           }
 
-          echo 'SYNC_OK' . PHP_EOL;
-          echo 'sample_ts=' . (\$data['sample_ts'] ?? '') . PHP_EOL;
+          echo 'LIVE_SYNC_OK' . PHP_EOL;
+          "
+
+      - name: Save voltage history to DB
+        run: php zcs_solarman_history_sync.php | tee history_output.json
+
+      - name: Validate history sync
+        run: |
+          php -r "
+          \$raw = file_get_contents('history_output.json');
+          \$data = json_decode(\$raw, true);
+
+          if (!is_array(\$data)) {
+              fwrite(STDERR, 'History output non JSON valido' . PHP_EOL);
+              exit(1);
+          }
+
+          if (!(\$data['ok'] ?? false)) {
+              fwrite(STDERR, 'Storico tensione fallito' . PHP_EOL);
+              if (isset(\$data['error'])) {
+                  fwrite(STDERR, \$data['error'] . PHP_EOL);
+              }
+              exit(1);
+          }
+
+          echo 'HISTORY_SYNC_OK' . PHP_EOL;
           "
 
       - name: Commit updated JSON files
