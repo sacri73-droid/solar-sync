@@ -1,7 +1,7 @@
 {
     "ok": true,
     "source": "solarman_dayrange",
-    "updated_at": "2026-04-11 15:34:28",
+    "updated_at": "2026-04-11 16:09:01",
     "range": {
         "start": "2026/04/04",
         "end": "2026/04/11"
@@ -17310,6 +17310,62 @@
             "current_ac": 15.92,
             "frequency_ac": 49.99,
             "power_ac_output": 3830
+        },
+        {
+            "ts": 1775914488,
+            "datetime": "2026-04-11 15:34:48",
+            "voltage_ac": 239.1,
+            "current_ac": 15.88,
+            "frequency_ac": 50,
+            "power_ac_output": 3800
+        },
+        {
+            "ts": 1775914793,
+            "datetime": "2026-04-11 15:39:53",
+            "voltage_ac": 238.3,
+            "current_ac": 15.58,
+            "frequency_ac": 49.99,
+            "power_ac_output": 3720
+        },
+        {
+            "ts": 1775915098,
+            "datetime": "2026-04-11 15:44:58",
+            "voltage_ac": 239.9,
+            "current_ac": 15.23,
+            "frequency_ac": 50,
+            "power_ac_output": 3660
+        },
+        {
+            "ts": 1775915403,
+            "datetime": "2026-04-11 15:50:03",
+            "voltage_ac": 243.2,
+            "current_ac": 14.59,
+            "frequency_ac": 49.99,
+            "power_ac_output": 3550
+        },
+        {
+            "ts": 1775915708,
+            "datetime": "2026-04-11 15:55:08",
+            "voltage_ac": 239.7,
+            "current_ac": 14.4,
+            "frequency_ac": 49.95,
+            "power_ac_output": 3460
+        },
+        {
+            "ts": 1775916013,
+            "datetime": "2026-04-11 16:00:13",
+            "voltage_ac": 239,
+            "current_ac": 14.12,
+            "frequency_ac": 49.98,
+            "power_ac_output": 3380
+        },
+        {
+            "ts": 1775916330,
+            "datetime": "2026-04-11 16:05:30",
+            "voltage_ac": 237.7,
+            "current_ac": 13.9,
+            "frequency_ac": 49.98,
+            "power_ac_output": 3310
         }
     ]
 }
