@@ -1,7 +1,7 @@
 {
     "ok": true,
     "source": "solarman_dayrange",
-    "updated_at": "2026-04-11 13:47:56",
+    "updated_at": "2026-04-11 14:25:11",
     "range": {
         "start": "2026/04/04",
         "end": "2026/04/11"
@@ -17142,6 +17142,62 @@
             "current_ac": 20.21,
             "frequency_ac": 50.01,
             "power_ac_output": 4920
+        },
+        {
+            "ts": 1775908248,
+            "datetime": "2026-04-11 13:50:48",
+            "voltage_ac": 244.4,
+            "current_ac": 19.9,
+            "frequency_ac": 50.01,
+            "power_ac_output": 4880
+        },
+        {
+            "ts": 1775908553,
+            "datetime": "2026-04-11 13:55:53",
+            "voltage_ac": 241.9,
+            "current_ac": 19.95,
+            "frequency_ac": 49.94,
+            "power_ac_output": 4840
+        },
+        {
+            "ts": 1775908858,
+            "datetime": "2026-04-11 14:00:58",
+            "voltage_ac": 246.6,
+            "current_ac": 19.55,
+            "frequency_ac": 50.04,
+            "power_ac_output": 4830
+        },
+        {
+            "ts": 1775909163,
+            "datetime": "2026-04-11 14:06:03",
+            "voltage_ac": 245.5,
+            "current_ac": 19.45,
+            "frequency_ac": 49.98,
+            "power_ac_output": 4790
+        },
+        {
+            "ts": 1775909469,
+            "datetime": "2026-04-11 14:11:09",
+            "voltage_ac": 238.4,
+            "current_ac": 19.91,
+            "frequency_ac": 50,
+            "power_ac_output": 4760
+        },
+        {
+            "ts": 1775909774,
+            "datetime": "2026-04-11 14:16:14",
+            "voltage_ac": 241,
+            "current_ac": 19.48,
+            "frequency_ac": 50.02,
+            "power_ac_output": 4710
+        },
+        {
+            "ts": 1775910079,
+            "datetime": "2026-04-11 14:21:19",
+            "voltage_ac": 246.5,
+            "current_ac": 18.89,
+            "frequency_ac": 50.01,
+            "power_ac_output": 4670
         }
     ]
 }
