@@ -1,119 +1,253 @@
 <?php
+// file: zcs_solarman_history_sync.php
+
 declare(strict_types=1);
+
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+date_default_timezone_set('Europe/Rome');
+
+const DATA_DIR = __DIR__ . '/data';
+const HISTORY_FILE = DATA_DIR . '/voltage_history.json';
+const HTTP_TIMEOUT = 45;
+const HTTP_CONNECT_TIMEOUT = 15;
+const MAX_POINTS = 20000;
+
+if (!is_dir(DATA_DIR)) {
+    mkdir(DATA_DIR, 0777, true);
+}
 
 $secrets = require __DIR__ . '/private/zcs_secrets.php';
 
-function json_response(array $data): void
+function json_response(array $data, int $statusCode = 200): void
 {
-    echo json_encode($data, JSON_PRETTY_PRINT);
+    http_response_code($statusCode);
+    echo json_encode(
+        $data,
+        JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+    );
     exit;
 }
 
-function safePdo(array $secrets): ?PDO
+function must_string(array $cfg, string $key): string
 {
-    try {
-        $dsn = sprintf(
-            'mysql:host=%s;dbname=%s;charset=%s',
-            $secrets['db_host'],
-            $secrets['db_name'],
-            $secrets['db_charset']
-        );
-
-        return new PDO($dsn, $secrets['db_user'], $secrets['db_pass'], [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-    } catch (Throwable $e) {
-        return null; // 🔥 NON blocca tutto
+    if (!isset($cfg[$key]) || !is_string($cfg[$key]) || trim($cfg[$key]) === '') {
+        throw new RuntimeException("Configurazione mancante o vuota: {$key}");
     }
+
+    return trim($cfg[$key]);
 }
 
-try {
-    $pdo = safePdo($secrets);
+function to_float_or_null(mixed $value): ?float
+{
+    return ($value !== null && $value !== '' && is_numeric($value)) ? (float)$value : null;
+}
 
-    // === API SOLARMAN ===
-    $url = "https://globalpro.solarmanpv.com/device-s/device/238269913/stats/dayrange?startDay=2026%2F04%2F06&endDay=2026%2F04%2F12&lan=it";
+function read_json_file(string $path): array
+{
+    if (!is_file($path)) {
+        return [];
+    }
 
+    $raw = file_get_contents($path);
+    $decoded = json_decode((string)$raw, true);
+
+    return is_array($decoded) ? $decoded : [];
+}
+
+function write_json_file(string $path, array $payload): void
+{
+    file_put_contents(
+        $path,
+        json_encode(
+            $payload,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        )
+    );
+}
+
+function http_get_json(string $url, array $headers = []): array
+{
     $ch = curl_init($url);
+
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER => [
-            "Cookie: " . $secrets['solarman_cookie'],
-            "Authorization: Bearer " . $secrets['solarman_bearer_token'],
-            "User-Agent: Mozilla/5.0",
-            "Accept: application/json"
-        ],
+        CURLOPT_HTTPHEADER => array_merge([
+            'Accept: application/json, text/plain, */*',
+            'User-Agent: Mozilla/5.0',
+            'Origin: https://globalpro.solarmanpv.com',
+            'Referer: https://globalpro.solarmanpv.com/',
+        ], $headers),
+        CURLOPT_TIMEOUT => HTTP_TIMEOUT,
+        CURLOPT_CONNECTTIMEOUT => HTTP_CONNECT_TIMEOUT,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
     ]);
 
-    $response = curl_exec($ch);
+    $raw = curl_exec($ch);
 
-    if (!$response) {
-        throw new Exception("Errore CURL");
+    if ($raw === false) {
+        $err = curl_error($ch);
+        curl_close($ch);
+        throw new RuntimeException('Errore cURL: ' . $err);
     }
 
-    $data = json_decode($response, true);
+    $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-    if (!is_array($data)) {
-        throw new Exception("JSON non valido");
+    $decoded = json_decode($raw, true);
+
+    if (!is_array($decoded)) {
+        throw new RuntimeException('Risposta non JSON valida dallo storico Solarman.');
     }
 
-    $rows = 0;
-    $deviceSn = $secrets['solarman_device_sn'];
+    if ($status >= 400) {
+        throw new RuntimeException(
+            'HTTP ' . $status . ' dallo storico Solarman: ' . json_encode($decoded, JSON_UNESCAPED_UNICODE)
+        );
+    }
 
-    // 🔥 fallback file
-    $historyFile = __DIR__ . '/data/voltage_history.json';
-    $fileData = [];
+    return $decoded;
+}
+
+function fetch_history_from_solarman(array $cfg, string $startDay, string $endDay): array
+{
+    $deviceId = must_string($cfg, 'solarman_device_id');
+    $cookie = must_string($cfg, 'solarman_cookie');
+    $bearer = must_string($cfg, 'solarman_bearer_token');
+
+    if (stripos($bearer, 'Bearer ') !== 0) {
+        $bearer = 'Bearer ' . $bearer;
+    }
+
+    $url = sprintf(
+        'https://globalpro.solarmanpv.com/device-s/device/%s/stats/dayrange?startDay=%s&endDay=%s&lan=it',
+        rawurlencode($deviceId),
+        rawurlencode($startDay),
+        rawurlencode($endDay)
+    );
+
+    return http_get_json($url, [
+        'Cookie: ' . $cookie,
+        'Authorization: ' . $bearer,
+    ]);
+}
+
+function normalize_history(array $data): array
+{
+    $wanted = [
+        'AV1' => 'voltage_ac',
+        'AC1' => 'current_ac',
+        'A_Fo1' => 'frequency_ac',
+        'T_AC_OP' => 'power_ac_output',
+    ];
+
+    $byTs = [];
 
     foreach ($data as $param) {
-        if (($param['storageName'] ?? '') !== 'AV1') {
+        $storageName = (string)($param['storageName'] ?? '');
+        if (!isset($wanted[$storageName])) {
             continue;
         }
 
-        foreach ($param['detailList'] as $row) {
-            $ts = (int)$row['collectionTime'];
-            $value = (float)$row['value'];
-            $dt = date('Y-m-d H:i:s', $ts);
+        $targetField = $wanted[$storageName];
+        $detailList = $param['detailList'] ?? [];
 
-            // ✅ salva su DB se disponibile
-            if ($pdo) {
-                $stmt = $pdo->prepare("
-                    INSERT INTO solar_voltage_history
-                    (device_sn, sample_ts, datetime_local, voltage_ac, raw_json)
-                    VALUES (:sn, :ts, :dt, :v, :raw)
-                    ON DUPLICATE KEY UPDATE voltage_ac = VALUES(voltage_ac)
-                ");
+        if (!is_array($detailList)) {
+            continue;
+        }
 
-                $stmt->execute([
-                    'sn' => $deviceSn,
-                    'ts' => $ts,
-                    'dt' => $dt,
-                    'v'  => $value,
-                    'raw'=> json_encode($row)
-                ]);
+        foreach ($detailList as $row) {
+            $ts = isset($row['collectionTime']) && is_numeric($row['collectionTime'])
+                ? (int)$row['collectionTime']
+                : 0;
+
+            if ($ts <= 0) {
+                continue;
             }
 
-            // ✅ sempre salva su file
-            $fileData[] = [
-                'ts' => $ts,
-                'datetime' => $dt,
-                'voltage' => $value
-            ];
+            if (!isset($byTs[$ts])) {
+                $byTs[$ts] = [
+                    'ts' => $ts,
+                    'datetime' => date('Y-m-d H:i:s', $ts),
+                    'voltage_ac' => null,
+                    'current_ac' => null,
+                    'frequency_ac' => null,
+                    'power_ac_output' => null,
+                ];
+            }
 
-            $rows++;
+            $byTs[$ts][$targetField] = to_float_or_null($row['value'] ?? null);
         }
     }
 
-    file_put_contents($historyFile, json_encode($fileData, JSON_PRETTY_PRINT));
+    ksort($byTs, SORT_NUMERIC);
+
+    $rows = array_values($byTs);
+
+    if (count($rows) > MAX_POINTS) {
+        $rows = array_slice($rows, -MAX_POINTS);
+    }
+
+    return $rows;
+}
+
+try {
+    $endDay = date('Y/m/d');
+    $startDay = date('Y/m/d', strtotime('-7 days'));
+
+    $remoteData = fetch_history_from_solarman($secrets, $startDay, $endDay);
+    $newRows = normalize_history($remoteData);
+
+    $existing = read_json_file(HISTORY_FILE);
+    $existingRows = isset($existing['rows']) && is_array($existing['rows']) ? $existing['rows'] : [];
+
+    $merged = [];
+
+    foreach ($existingRows as $row) {
+        if (isset($row['ts']) && is_numeric($row['ts'])) {
+            $merged[(int)$row['ts']] = $row;
+        }
+    }
+
+    foreach ($newRows as $row) {
+        $merged[(int)$row['ts']] = $row;
+    }
+
+    ksort($merged, SORT_NUMERIC);
+    $rows = array_values($merged);
+
+    if (count($rows) > MAX_POINTS) {
+        $rows = array_slice($rows, -MAX_POINTS);
+    }
+
+    $payload = [
+        'ok' => true,
+        'source' => 'solarman_dayrange',
+        'updated_at' => date('Y-m-d H:i:s'),
+        'range' => [
+            'start' => $startDay,
+            'end' => $endDay,
+        ],
+        'rows' => $rows,
+    ];
+
+    write_json_file(HISTORY_FILE, $payload);
 
     json_response([
         'ok' => true,
-        'rows' => $rows,
-        'db_used' => $pdo !== null,
-        'file_saved' => true
+        'message' => 'Storico importato',
+        'rows' => count($rows),
+        'range' => [
+            'start' => $startDay,
+            'end' => $endDay,
+        ],
     ]);
-
 } catch (Throwable $e) {
     json_response([
         'ok' => false,
-        'error' => $e->getMessage()
-    ]);
+        'error' => $e->getMessage(),
+    ], 500);
 }
