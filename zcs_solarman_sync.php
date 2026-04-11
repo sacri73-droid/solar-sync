@@ -123,28 +123,6 @@ function fetch_solarman_live(array $cfg): array
     return $flat;
 }
 
-function compute_flow(array $summary): array
-{
-    $pv = max(0, $summary['power_pv_total']);
-    $load = max(0, $summary['load_power']);
-    $grid = $summary['grid_power'];
-    $batteryPower = $summary['battery_power'];
-
-    $pvToHome = min($pv, $load);
-    $pvToBattery = $batteryPower > 0 ? $batteryPower : 0;
-    $batteryToHome = $batteryPower < 0 ? abs($batteryPower) : 0;
-    $gridToHome = $grid > 0 ? $grid : 0;
-    $homeToGrid = $grid < 0 ? abs($grid) : 0;
-
-    return [
-        'pv_to_home' => to_int($pvToHome),
-        'pv_to_battery' => to_int($pvToBattery),
-        'battery_to_home' => to_int($batteryToHome),
-        'grid_to_home' => to_int($gridToHome),
-        'home_to_grid' => to_int($homeToGrid),
-    ];
-}
-
 function build_summary(array $flat): array
 {
     return [
@@ -208,12 +186,30 @@ function build_summary(array $flat): array
     ];
 }
 
-function build_latest_payload(array $summary, array $flow, int $sampleTs, string $serial): array
+function compute_flow(array $summary): array
+{
+    $pv = max(0, $summary['power_pv_total']);
+    $load = max(0, $summary['load_power']);
+    $grid = $summary['grid_power'];
+    $batteryPower = $summary['battery_power'];
+
+    return [
+        'pv_to_home' => to_int(min($pv, $load)),
+        'pv_to_battery' => $batteryPower > 0 ? to_int($batteryPower) : 0,
+        'battery_to_home' => $batteryPower < 0 ? to_int(abs($batteryPower)) : 0,
+        'grid_to_home' => $grid > 0 ? to_int($grid) : 0,
+        'home_to_grid' => $grid < 0 ? to_int(abs($grid)) : 0,
+    ];
+}
+
+function build_latest_payload(array $summary, array $flow, int $sampleTs, string $serial, bool $dbSaved, ?string $dbError): array
 {
     return [
         'ok' => true,
-        'message' => 'Sync completata',
-        'saved_rows' => 1,
+        'message' => $dbSaved ? 'Sync completata' : 'Sync completata con fallback JSON',
+        'saved_rows' => $dbSaved ? 1 : 0,
+        'db_saved' => $dbSaved,
+        'db_error' => $dbError,
         'sample_ts' => date('Y-m-d H:i:s', $sampleTs),
         'serial' => $serial,
         'summary' => [
@@ -242,6 +238,8 @@ function save_json_files(array $latestPayload): void
             'last_run' => date('Y-m-d H:i:s'),
             'sample_ts' => $latestPayload['sample_ts'] ?? null,
             'serial' => $latestPayload['serial'] ?? null,
+            'db_saved' => $latestPayload['db_saved'] ?? false,
+            'db_error' => $latestPayload['db_error'] ?? null,
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
     );
 }
@@ -258,6 +256,7 @@ function db_connect(array $cfg): PDO
     return new PDO($dsn, (string) cfg($cfg, 'db_user', ''), (string) cfg($cfg, 'db_pass', ''), [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_TIMEOUT => 10,
     ]);
 }
 
@@ -486,18 +485,30 @@ try {
     $summary = build_summary($flat);
     $sampleTs = time();
     $serial = (string) cfg($cfg, 'solarman_device_sn', '');
-
     $flow = compute_flow($summary);
-    $savedRows = save_sample(db_connect($cfg), $cfg, $summary, $flat, $sampleTs, $serial);
 
-    $latestPayload = build_latest_payload($summary, $flow, $sampleTs, $serial);
+    $dbSaved = false;
+    $dbError = null;
+
+    try {
+        $pdo = db_connect($cfg);
+        save_sample($pdo, $cfg, $summary, $flat, $sampleTs, $serial);
+        $dbSaved = true;
+    } catch (Throwable $dbEx) {
+        $dbSaved = false;
+        $dbError = $dbEx->getMessage();
+    }
+
+    $latestPayload = build_latest_payload($summary, $flow, $sampleTs, $serial, $dbSaved, $dbError);
     save_json_files($latestPayload);
 
     json_response([
         'ok' => true,
-        'message' => 'Sync completata',
+        'message' => $dbSaved ? 'Sync completata' : 'Sync completata con fallback JSON',
         'run_id' => date('Ymd_His') . '_' . substr(md5((string) microtime(true)), 0, 8),
-        'saved_rows' => $savedRows,
+        'saved_rows' => $dbSaved ? 1 : 0,
+        'db_saved' => $dbSaved,
+        'db_error' => $dbError,
         'elapsed_ms' => (int) round((microtime(true) - $startedAt) * 1000),
         'sample_ts' => date('Y-m-d H:i:s', $sampleTs),
         'serial' => $serial,
