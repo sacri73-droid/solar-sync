@@ -103,10 +103,10 @@ jobs:
           "
 
       - name: Commit updated JSON files
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/latest.json data/heartbeat.json data/voltage_history.json
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "Update solar JSON files"
-          git push
+  run: |
+    git config user.name "github-actions[bot]"
+    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+    git add data/latest.json data/heartbeat.json data/voltage_history.json
+    git diff --cached --quiet && echo "No changes to commit" && exit 0
+    git commit -m "Update solar live + history JSON"
+    git push
