@@ -1,7 +1,7 @@
 {
     "ok": true,
     "source": "solarman_dayrange",
-    "updated_at": "2026-04-21 21:38:14",
+    "updated_at": "2026-04-21 22:29:55",
     "range": {
         "start": "2026/04/14",
         "end": "2026/04/21"
@@ -40582,6 +40582,86 @@
             "current_ac": 2.34,
             "frequency_ac": 49.99,
             "power_ac_output": 510
+        },
+        {
+            "ts": 1776800452,
+            "datetime": "2026-04-21 21:40:52",
+            "voltage_ac": 234,
+            "current_ac": 2.63,
+            "frequency_ac": 50.03,
+            "power_ac_output": 580
+        },
+        {
+            "ts": 1776800757,
+            "datetime": "2026-04-21 21:45:57",
+            "voltage_ac": 225.9,
+            "current_ac": 2.41,
+            "frequency_ac": 49.98,
+            "power_ac_output": 510
+        },
+        {
+            "ts": 1776801062,
+            "datetime": "2026-04-21 21:51:02",
+            "voltage_ac": 232.1,
+            "current_ac": 2.25,
+            "frequency_ac": 50.02,
+            "power_ac_output": 480
+        },
+        {
+            "ts": 1776801378,
+            "datetime": "2026-04-21 21:56:18",
+            "voltage_ac": 230.7,
+            "current_ac": 2.64,
+            "frequency_ac": 50.05,
+            "power_ac_output": 580
+        },
+        {
+            "ts": 1776801683,
+            "datetime": "2026-04-21 22:01:23",
+            "voltage_ac": 231.7,
+            "current_ac": 2.41,
+            "frequency_ac": 49.91,
+            "power_ac_output": 520
+        },
+        {
+            "ts": 1776801988,
+            "datetime": "2026-04-21 22:06:28",
+            "voltage_ac": 232.8,
+            "current_ac": 2.1,
+            "frequency_ac": 49.95,
+            "power_ac_output": 450
+        },
+        {
+            "ts": 1776802293,
+            "datetime": "2026-04-21 22:11:33",
+            "voltage_ac": 232.6,
+            "current_ac": 2.12,
+            "frequency_ac": 49.99,
+            "power_ac_output": 450
+        },
+        {
+            "ts": 1776802599,
+            "datetime": "2026-04-21 22:16:39",
+            "voltage_ac": 233.1,
+            "current_ac": 2.37,
+            "frequency_ac": 49.96,
+            "power_ac_output": 520
+        },
+        {
+            "ts": 1776802904,
+            "datetime": "2026-04-21 22:21:44",
+            "voltage_ac": 234,
+            "current_ac": 2.14,
+            "frequency_ac": 49.99,
+            "power_ac_output": 460
+        },
+        {
+            "ts": 1776803216,
+            "datetime": "2026-04-21 22:26:56",
+            "voltage_ac": 229.3,
+            "current_ac": 2.35,
+            "frequency_ac": 50.01,
+            "power_ac_output": 500
         }
     ]
 }
