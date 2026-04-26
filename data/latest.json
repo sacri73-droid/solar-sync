@@ -1,15 +1,15 @@
 {
     "ok": true,
-    "time": "2026-04-26 23:51:36",
-    "sample_ts": "2026-04-26 23:49:50",
+    "time": "2026-04-27 00:23:20",
+    "sample_ts": "2026-04-27 00:21:39",
     "source": "github_json",
     "data": {
-        "ts": 1777240190,
-        "voltage": 227.8,
+        "ts": 1777242099,
+        "voltage": 236.7,
         "load": 260,
         "grid": 0,
         "pv": 0,
-        "battery_soc": 54,
+        "battery_soc": 52,
         "battery_power": -240
     },
     "flow": {
