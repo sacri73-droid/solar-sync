@@ -1,7 +1,7 @@
 {
     "ok": true,
     "source": "solarman_dayrange",
-    "updated_at": "2026-05-02 07:57:51",
+    "updated_at": "2026-05-02 09:44:21",
     "range": {
         "start": "2026/04/25",
         "end": "2026/05/02"
@@ -64254,6 +64254,182 @@
             "current_ac": 1.47,
             "frequency_ac": 50.03,
             "power_ac_output": 280
+        },
+        {
+            "ts": 1777701442,
+            "datetime": "2026-05-02 07:57:22",
+            "voltage_ac": 230.4,
+            "current_ac": 1.1,
+            "frequency_ac": 50.03,
+            "power_ac_output": 170
+        },
+        {
+            "ts": 1777701747,
+            "datetime": "2026-05-02 08:02:27",
+            "voltage_ac": 232.7,
+            "current_ac": 1.16,
+            "frequency_ac": 49.97,
+            "power_ac_output": 190
+        },
+        {
+            "ts": 1777702052,
+            "datetime": "2026-05-02 08:07:32",
+            "voltage_ac": 235,
+            "current_ac": 1.43,
+            "frequency_ac": 49.98,
+            "power_ac_output": 270
+        },
+        {
+            "ts": 1777702357,
+            "datetime": "2026-05-02 08:12:37",
+            "voltage_ac": 227.8,
+            "current_ac": 1.09,
+            "frequency_ac": 50.01,
+            "power_ac_output": 170
+        },
+        {
+            "ts": 1777702663,
+            "datetime": "2026-05-02 08:17:43",
+            "voltage_ac": 234.5,
+            "current_ac": 1.11,
+            "frequency_ac": 50.02,
+            "power_ac_output": 180
+        },
+        {
+            "ts": 1777702968,
+            "datetime": "2026-05-02 08:22:48",
+            "voltage_ac": 232.4,
+            "current_ac": 1.29,
+            "frequency_ac": 50.01,
+            "power_ac_output": 230
+        },
+        {
+            "ts": 1777703283,
+            "datetime": "2026-05-02 08:28:03",
+            "voltage_ac": 229.5,
+            "current_ac": 1.34,
+            "frequency_ac": 50.04,
+            "power_ac_output": 240
+        },
+        {
+            "ts": 1777703588,
+            "datetime": "2026-05-02 08:33:08",
+            "voltage_ac": 230.1,
+            "current_ac": 1.6,
+            "frequency_ac": 49.96,
+            "power_ac_output": 320
+        },
+        {
+            "ts": 1777703894,
+            "datetime": "2026-05-02 08:38:14",
+            "voltage_ac": 236,
+            "current_ac": 1.81,
+            "frequency_ac": 50.02,
+            "power_ac_output": 380
+        },
+        {
+            "ts": 1777704199,
+            "datetime": "2026-05-02 08:43:19",
+            "voltage_ac": 231.7,
+            "current_ac": 1.55,
+            "frequency_ac": 50.02,
+            "power_ac_output": 300
+        },
+        {
+            "ts": 1777704504,
+            "datetime": "2026-05-02 08:48:24",
+            "voltage_ac": 229.9,
+            "current_ac": 1.53,
+            "frequency_ac": 50.02,
+            "power_ac_output": 300
+        },
+        {
+            "ts": 1777704809,
+            "datetime": "2026-05-02 08:53:29",
+            "voltage_ac": 232.6,
+            "current_ac": 1.6,
+            "frequency_ac": 50,
+            "power_ac_output": 320
+        },
+        {
+            "ts": 1777705115,
+            "datetime": "2026-05-02 08:58:35",
+            "voltage_ac": 229.3,
+            "current_ac": 1.36,
+            "frequency_ac": 50.02,
+            "power_ac_output": 250
+        },
+        {
+            "ts": 1777705420,
+            "datetime": "2026-05-02 09:03:40",
+            "voltage_ac": 232.6,
+            "current_ac": 1.15,
+            "frequency_ac": 49.92,
+            "power_ac_output": 190
+        },
+        {
+            "ts": 1777705735,
+            "datetime": "2026-05-02 09:08:55",
+            "voltage_ac": 231.6,
+            "current_ac": 0.96,
+            "frequency_ac": 50,
+            "power_ac_output": 120
+        },
+        {
+            "ts": 1777706040,
+            "datetime": "2026-05-02 09:14:00",
+            "voltage_ac": 230.9,
+            "current_ac": 1.19,
+            "frequency_ac": 50.03,
+            "power_ac_output": 200
+        },
+        {
+            "ts": 1777706346,
+            "datetime": "2026-05-02 09:19:06",
+            "voltage_ac": 231.8,
+            "current_ac": 1.43,
+            "frequency_ac": 50,
+            "power_ac_output": 270
+        },
+        {
+            "ts": 1777706651,
+            "datetime": "2026-05-02 09:24:11",
+            "voltage_ac": 234,
+            "current_ac": 1.16,
+            "frequency_ac": 50.06,
+            "power_ac_output": 190
+        },
+        {
+            "ts": 1777706956,
+            "datetime": "2026-05-02 09:29:16",
+            "voltage_ac": 230.4,
+            "current_ac": 1.09,
+            "frequency_ac": 50.03,
+            "power_ac_output": 170
+        },
+        {
+            "ts": 1777707261,
+            "datetime": "2026-05-02 09:34:21",
+            "voltage_ac": 231.3,
+            "current_ac": 1.34,
+            "frequency_ac": 49.96,
+            "power_ac_output": 250
+        },
+        {
+            "ts": 1777707567,
+            "datetime": "2026-05-02 09:39:27",
+            "voltage_ac": 230.7,
+            "current_ac": 1.15,
+            "frequency_ac": 50,
+            "power_ac_output": 180
+        },
+        {
+            "ts": 1777707674,
+            "datetime": "2026-05-02 09:41:14",
+            "voltage_ac": 230.5,
+            "current_ac": 1.11,
+            "frequency_ac": 50.01,
+            "power_ac_output": 170
         }
     ]
 }
