@@ -1,8 +1,8 @@
 {
     "ok": true,
-    "run_id": "20260504_171008_42fcdfeb",
-    "last_run": "2026-05-04 17:10:09",
-    "sample_ts": "2026-05-04 17:06:31",
+    "run_id": "20260504_190009_fa1cbaca",
+    "last_run": "2026-05-04 19:00:11",
+    "sample_ts": "2026-05-04 18:54:41",
     "saved_rows": 1,
-    "elapsed_ms": 1050
+    "elapsed_ms": 1143
 }
