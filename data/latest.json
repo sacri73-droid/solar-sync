@@ -1,21 +1,21 @@
 {
     "ok": true,
-    "time": "2026-05-19 00:51:49",
-    "sample_ts": "2026-05-19 00:50:00",
+    "time": "2026-05-19 01:51:47",
+    "sample_ts": "2026-05-19 01:47:38",
     "source": "github_json",
     "data": {
-        "ts": 1779144600,
-        "voltage": 228.7,
-        "load": 280,
+        "ts": 1779148058,
+        "voltage": 227.2,
+        "load": 400,
         "grid": 10,
         "pv": 0,
-        "battery_soc": 71,
-        "battery_power": -290
+        "battery_soc": 68,
+        "battery_power": -380
     },
     "flow": {
         "pv_to_home": 0,
         "pv_to_battery": 0,
-        "battery_to_home": 290,
+        "battery_to_home": 380,
         "grid_to_home": 10,
         "home_to_grid": 0
     }
